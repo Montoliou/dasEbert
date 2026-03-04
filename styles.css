@@ -624,10 +624,18 @@ summary:focus-visible {
   font-size: 13px;
 }
 
+.chart-grid-label-right {
+  fill: var(--mlp-blue);
+}
+
 .chart-title-small {
   fill: var(--text-dark);
   font-size: 14px;
   font-weight: 700;
+}
+
+.chart-title-wealth {
+  fill: rgba(3, 61, 93, 0.72);
 }
 
 .legend {
@@ -656,6 +664,11 @@ summary:focus-visible {
 
 .legend-swatch-green {
   background: var(--success-green);
+}
+
+.legend-swatch-wealth {
+  border: 1px solid rgba(71, 161, 144, 0.45);
+  background: linear-gradient(180deg, rgba(71, 161, 144, 0.28), rgba(71, 161, 144, 0.08));
 }
 
 .table-scroll {

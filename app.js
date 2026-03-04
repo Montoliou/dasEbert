@@ -595,34 +595,50 @@ function renderChart(scenario) {
   const rows = scenario.yearlyRows;
   const width = 880;
   const height = 360;
-  const margin = { top: 24, right: 32, bottom: 56, left: 80 };
+  const margin = { top: 32, right: 96, bottom: 56, left: 88 };
   const chartWidth = width - margin.left - margin.right;
   const chartHeight = height - margin.top - margin.bottom;
-  const values = rows.flatMap((row) => [row.monthlyPreTax, row.monthlyAfterTax]);
-  const maxAbs = Math.max(...values.map((value) => Math.abs(value)), 1000);
-  const yMax = niceRound(maxAbs * 1.15);
-  const yMin = -yMax;
-  const zeroY = toY(0, yMin, yMax, chartHeight, margin.top);
-  const gridValues = [yMax, yMax / 2, 0, yMin / 2, yMin];
-
-  const preTaxPath = buildLinePath(rows.map((row, index) => ({
+  const liquidityAxis = buildNiceAxis(rows.flatMap((row) => [row.monthlyPreTax, row.monthlyAfterTax]), {
+    tickCount: 5,
+    includeZero: true,
+    minPaddingRatio: 0.18,
+    minPaddingAbsolute: 80
+  });
+  const wealthAxis = buildNiceAxis(rows.map((row) => row.wealthWithInvestment), {
+    tickCount: 5,
+    includeZero: true,
+    minPaddingRatio: 0.1,
+    minPaddingAbsolute: 10000
+  });
+  const wealthBaselineY = toY(wealthAxis.min, wealthAxis.min, wealthAxis.max, chartHeight, margin.top);
+  const xValues = rows.map((row, index) => ({
     x: toX(index, rows.length, chartWidth, margin.left),
-    y: toY(row.monthlyPreTax, yMin, yMax, chartHeight, margin.top)
-  })));
-
-  const afterTaxPoints = rows.map((row, index) => ({
-    x: toX(index, rows.length, chartWidth, margin.left),
-    y: toY(row.monthlyAfterTax, yMin, yMax, chartHeight, margin.top)
+    row
+  }));
+  const wealthPoints = xValues.map(({ x, row }) => ({
+    x,
+    y: toY(row.wealthWithInvestment, wealthAxis.min, wealthAxis.max, chartHeight, margin.top)
+  }));
+  const preTaxPoints = xValues.map(({ x, row }) => ({
+    x,
+    y: toY(row.monthlyPreTax, liquidityAxis.min, liquidityAxis.max, chartHeight, margin.top)
+  }));
+  const afterTaxPoints = xValues.map(({ x, row }) => ({
+    x,
+    y: toY(row.monthlyAfterTax, liquidityAxis.min, liquidityAxis.max, chartHeight, margin.top)
   }));
 
+  const wealthAreaPath = buildAreaPath(wealthPoints, wealthBaselineY);
+  const wealthPath = buildLinePath(wealthPoints);
+  const preTaxPath = buildLinePath(preTaxPoints);
   const afterTaxPath = buildLinePath(afterTaxPoints);
   const points = rows.map((row, index) => {
     const x = toX(index, rows.length, chartWidth, margin.left);
     return `<text x="${x}" y="${height - 24}" text-anchor="middle" class="chart-axis-label">${row.year}</text>`;
   }).join("");
 
-  const grid = gridValues.map((value) => {
-    const y = toY(value, yMin, yMax, chartHeight, margin.top);
+  const liquidityGrid = liquidityAxis.ticks.map((value) => {
+    const y = toY(value, liquidityAxis.min, liquidityAxis.max, chartHeight, margin.top);
     const stroke = value === 0 ? "rgba(3,61,93,0.28)" : "rgba(190,182,170,0.4)";
     const strokeWidth = value === 0 ? 2 : 1;
     return `
@@ -631,20 +647,32 @@ function renderChart(scenario) {
     `;
   }).join("");
 
+  const wealthLabels = wealthAxis.ticks.map((value) => {
+    const y = toY(value, wealthAxis.min, wealthAxis.max, chartHeight, margin.top);
+    return `
+      <text x="${width - margin.right + 12}" y="${y + 5}" text-anchor="start" class="chart-grid-label chart-grid-label-right">${formatCurrency(value, 0)}</text>
+    `;
+  }).join("");
+
   dom.chart.innerHTML = `
     <defs>
-      <linearGradient id="afterTaxArea" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="rgba(19,133,62,0.24)" />
-        <stop offset="100%" stop-color="rgba(19,133,62,0.02)" />
+      <linearGradient id="wealthArea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(71,161,144,0.22)" />
+        <stop offset="100%" stop-color="rgba(71,161,144,0.02)" />
       </linearGradient>
     </defs>
-    ${grid}
-    <path d="${buildAreaPath(afterTaxPoints, zeroY)}" fill="url(#afterTaxArea)"></path>
+    ${liquidityGrid}
+    <path d="${wealthAreaPath}" fill="url(#wealthArea)"></path>
+    <path d="${wealthPath}" fill="none" stroke="rgba(71,161,144,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+    <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${height - margin.bottom}" stroke="rgba(190,182,170,0.75)" stroke-width="1"></line>
+    <line x1="${width - margin.right}" y1="${margin.top}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(190,182,170,0.75)" stroke-width="1"></line>
     <path d="${preTaxPath}" fill="none" stroke="#047584" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
     <path d="${afterTaxPath}" fill="none" stroke="#13853e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
-    <circle cx="${afterTaxPoints[afterTaxPoints.length - 1].x}" cy="${toY(rows[rows.length - 1].monthlyPreTax, yMin, yMax, chartHeight, margin.top)}" r="5" fill="#047584"></circle>
+    <circle cx="${afterTaxPoints[afterTaxPoints.length - 1].x}" cy="${preTaxPoints[preTaxPoints.length - 1].y}" r="5" fill="#047584"></circle>
     <circle cx="${afterTaxPoints[afterTaxPoints.length - 1].x}" cy="${afterTaxPoints[afterTaxPoints.length - 1].y}" r="5" fill="#13853e"></circle>
-    <text x="${margin.left}" y="16" class="chart-title-small">Monatlicher Durchschnitt pro Jahr</text>
+    <text x="${margin.left}" y="16" class="chart-title-small">Liquidität p.m.</text>
+    <text x="${width - margin.right}" y="16" text-anchor="end" class="chart-title-small chart-title-wealth">Vermögen mit Immo</text>
+    ${wealthLabels}
     ${points}
   `;
 }
@@ -783,13 +811,80 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-function niceRound(value) {
-  const absolute = Math.abs(value);
-  if (absolute <= 1000) {
-    return 1000;
+function buildNiceAxis(
+  values,
+  {
+    tickCount = 5,
+    includeZero = true,
+    minPaddingRatio = 0.1,
+    minPaddingAbsolute = 0
+  } = {}
+) {
+  let min = Math.min(...values);
+  let max = Math.max(...values);
+  const allNonNegative = values.every((value) => value >= 0);
+  const allNonPositive = values.every((value) => value <= 0);
+
+  if (includeZero) {
+    min = Math.min(min, 0);
+    max = Math.max(max, 0);
   }
-  const factor = 10 ** Math.floor(Math.log10(absolute));
-  return Math.ceil(absolute / factor) * factor;
+
+  const rawRange = max - min || Math.max(Math.abs(max), 1);
+  const padding = Math.max(rawRange * minPaddingRatio, minPaddingAbsolute);
+  const paddedMin = min - padding;
+  const paddedMax = max + padding;
+  const step = niceNumber((paddedMax - paddedMin) / Math.max(tickCount - 1, 1), true);
+  let niceMin = Math.floor(paddedMin / step) * step;
+  let niceMax = Math.ceil(paddedMax / step) * step;
+
+  if (includeZero && allNonNegative) {
+    niceMin = 0;
+  }
+
+  if (includeZero && allNonPositive) {
+    niceMax = 0;
+  }
+
+  const ticks = [];
+
+  for (let value = niceMin; value <= niceMax + step / 2; value += step) {
+    ticks.push(Number(value.toFixed(6)));
+  }
+
+  return {
+    min: niceMin,
+    max: niceMax,
+    ticks
+  };
+}
+
+function niceNumber(value, roundValue) {
+  const exponent = Math.floor(Math.log10(value));
+  const fraction = value / 10 ** exponent;
+  let niceFraction;
+
+  if (roundValue) {
+    if (fraction < 1.5) {
+      niceFraction = 1;
+    } else if (fraction < 3) {
+      niceFraction = 2;
+    } else if (fraction < 7) {
+      niceFraction = 5;
+    } else {
+      niceFraction = 10;
+    }
+  } else if (fraction <= 1) {
+    niceFraction = 1;
+  } else if (fraction <= 2) {
+    niceFraction = 2;
+  } else if (fraction <= 5) {
+    niceFraction = 5;
+  } else {
+    niceFraction = 10;
+  }
+
+  return niceFraction * 10 ** exponent;
 }
 
 function formatCurrency(value, digits = 0, signed = false) {
