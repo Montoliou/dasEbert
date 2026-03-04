@@ -23,6 +23,19 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 body {
   margin: 0;
   font-family: Arial, "Segoe UI", sans-serif;
@@ -159,7 +172,7 @@ summary:focus-visible {
   color: var(--bg-white);
   font-size: clamp(40px, 5vw, 64px);
   line-height: 1.05;
-  max-width: 11ch;
+  max-width: 14ch;
 }
 
 .hero-text {
@@ -489,7 +502,7 @@ summary:focus-visible {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1080px;
+  min-width: 980px;
 }
 
 th,

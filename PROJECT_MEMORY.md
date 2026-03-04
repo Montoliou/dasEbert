@@ -16,11 +16,13 @@
 
 ## Current App Scope
 - Customer selects between one 1-room apartment and one 5-room apartment.
-- Customer enters taxable annual income and investment horizon.
+- Customer enters taxable annual income, equity contribution, and investment horizon.
 - Customer can adjust rent growth and property value growth.
 - Customer can switch between `Grundtabelle` and `Splitting`.
 - Customer can include income tax, solidarity surcharge, and church tax.
 - App calculates annual and monthly liquidity before and after tax over up to 20 years.
+- App compares customer wealth after 20 years `with investment` and `without investment`.
+- The comparison baseline is a conservative managed portfolio (`Vergleichsdepot`) rather than a high-volatility equity benchmark.
 - App shows project visuals and apartment floorplans from the expose.
 
 ## Data Basis And Assumptions
@@ -30,6 +32,16 @@
 - Two sample apartments are therefore modeled with editable default assumptions.
 - Tax logic is based on the current German income tax table and includes Soli and church tax options.
 - Financing assumptions combine editable market financing inputs with optional KfW usage.
+- Customer chooses how much equity to contribute.
+- If total financing exceeds 100 % of the property purchase price, bank financing gets a `0.5 %-point` interest surcharge.
+- Comparison asset is a conservative managed portfolio with lower expected return than MSCI World.
+- Default growth assumptions:
+  - rent growth: `1 %`
+  - property value growth: `1 %`
+  - inflation / cost inflation: `2 %`
+- Vacancy risk is mentioned but not built into the base case.
+- Exit costs are currently not modeled.
+- Bank follow-up interest is simplified as unchanged; subsidized KfW financing should not be extrapolated with the teaser rate beyond its first fixed period.
 
 ## Working Conventions
 - Main implementation files:
@@ -45,8 +57,8 @@
 
 ## Delivery Paths
 - Local development folder: repository root
-- GitHub delivery repo currently also mirrors the app under:
-  - `d:\\AppEntwicklung\\Immobilien\\dasEbert`
+- GitHub delivery repo:
+  - `https://github.com/Montoliou/dasEbert`
 - Current public deployment target:
   - `https://montolio.de/dasEbert/`
 

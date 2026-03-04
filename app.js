@@ -3,6 +3,9 @@ const ANCILLARY_COST_RATE = 0.075;
 const BUILDING_SHARE = 0.8;
 const SPECIAL_AFA_CAP_PER_SQM = 4000;
 const KFW_MAX_PER_UNIT = 150000;
+const KFW_FIXED_RATE_YEARS = 10;
+const COST_INFLATION_RATE = 0.02;
+const OVER_100_FINANCE_SURCHARGE = 0.5;
 
 const properties = {
   a64: {
@@ -42,10 +45,10 @@ const state = {
   filingStatus: "single",
   churchTaxEnabled: true,
   churchTaxRate: 9,
-  rentGrowth: 3,
-  valueGrowth: 2,
-  parkingEnabled: false,
+  rentGrowth: 1,
+  valueGrowth: 1,
   useKfw: true,
+  depotReturn: 5,
   marketRate: 4.05,
   marketRepayment: 2,
   kfwRate: 0.6,
@@ -53,11 +56,15 @@ const state = {
   propertyInputs: {
     a64: {
       price: properties.a64.defaultPrice,
-      rentPerSqm: properties.a64.defaultRentPerSqm
+      rentPerSqm: properties.a64.defaultRentPerSqm,
+      equityContribution: 20000,
+      parkingEnabled: properties.a64.recommendedParking
     },
     a60: {
       price: properties.a60.defaultPrice,
-      rentPerSqm: properties.a60.defaultRentPerSqm
+      rentPerSqm: properties.a60.defaultRentPerSqm,
+      equityContribution: 100000,
+      parkingEnabled: properties.a60.recommendedParking
     }
   }
 };
@@ -73,9 +80,11 @@ function init() {
 
 function captureDom() {
   dom.heroFacts = document.getElementById("hero-facts");
+  dom.heroAssumptions = document.getElementById("hero-assumptions");
   dom.propertySwitch = document.getElementById("property-switch");
   dom.filingSwitch = document.getElementById("filing-switch");
   dom.annualIncome = document.getElementById("annual-income");
+  dom.equityInput = document.getElementById("equity-input");
   dom.horizon = document.getElementById("horizon");
   dom.priceInput = document.getElementById("price-input");
   dom.rentInput = document.getElementById("rent-input");
@@ -85,6 +94,7 @@ function captureDom() {
   dom.churchRate = document.getElementById("church-rate");
   dom.parkingEnabled = document.getElementById("parking-enabled");
   dom.useKfw = document.getElementById("use-kfw");
+  dom.depotReturn = document.getElementById("depot-return");
   dom.marketRate = document.getElementById("market-rate");
   dom.marketRepayment = document.getElementById("market-repayment");
   dom.kfwRate = document.getElementById("kfw-rate");
@@ -128,6 +138,7 @@ function bindEvents() {
     [dom.horizon, "horizon", 5, 20],
     [dom.rentGrowth, "rentGrowth", 0, 8],
     [dom.valueGrowth, "valueGrowth", 0, 8],
+    [dom.depotReturn, "depotReturn", 0, 12],
     [dom.marketRate, "marketRate", 0, 10],
     [dom.marketRepayment, "marketRepayment", 0.5, 10],
     [dom.kfwRate, "kfwRate", 0, 10],
@@ -151,6 +162,11 @@ function bindEvents() {
     render();
   });
 
+  dom.equityInput.addEventListener("input", () => {
+    state.propertyInputs[state.selectedProperty].equityContribution = clamp(Number(dom.equityInput.value || 0), 0, 100000000);
+    render();
+  });
+
   dom.churchEnabled.addEventListener("change", () => {
     state.churchTaxEnabled = dom.churchEnabled.checked;
     dom.churchRate.disabled = !state.churchTaxEnabled;
@@ -163,7 +179,7 @@ function bindEvents() {
   });
 
   dom.parkingEnabled.addEventListener("change", () => {
-    state.parkingEnabled = dom.parkingEnabled.checked;
+    state.propertyInputs[state.selectedProperty].parkingEnabled = dom.parkingEnabled.checked;
     render();
   });
 
@@ -173,20 +189,25 @@ function bindEvents() {
     dom.kfwRepayment.disabled = !state.useKfw;
     render();
   });
+
+  bindSegmentedKeyboard(dom.propertySwitch, "data-property");
+  bindSegmentedKeyboard(dom.filingSwitch, "data-filing");
 }
 
 function setProperty(propertyId) {
   state.selectedProperty = propertyId;
-  state.parkingEnabled = properties[propertyId].recommendedParking;
   syncInputsWithState();
   render();
 }
 
 function syncInputsWithState() {
+  const propertyInput = state.propertyInputs[state.selectedProperty];
   dom.annualIncome.value = state.annualIncome;
+  dom.equityInput.value = Math.round(propertyInput.equityContribution);
   dom.horizon.value = state.horizon;
   dom.rentGrowth.value = state.rentGrowth;
   dom.valueGrowth.value = state.valueGrowth;
+  dom.depotReturn.value = state.depotReturn;
   dom.marketRate.value = state.marketRate;
   dom.marketRepayment.value = state.marketRepayment;
   dom.kfwRate.value = state.kfwRate;
@@ -194,25 +215,31 @@ function syncInputsWithState() {
   dom.churchEnabled.checked = state.churchTaxEnabled;
   dom.churchRate.value = String(state.churchTaxRate);
   dom.churchRate.disabled = !state.churchTaxEnabled;
-  dom.parkingEnabled.checked = state.parkingEnabled;
+  dom.parkingEnabled.checked = propertyInput.parkingEnabled;
   dom.useKfw.checked = state.useKfw;
   dom.kfwRate.disabled = !state.useKfw;
   dom.kfwRepayment.disabled = !state.useKfw;
-  dom.priceInput.value = Math.round(state.propertyInputs[state.selectedProperty].price);
-  dom.rentInput.value = state.propertyInputs[state.selectedProperty].rentPerSqm.toFixed(2);
+  dom.priceInput.value = Math.round(propertyInput.price);
+  dom.rentInput.value = propertyInput.rentPerSqm.toFixed(2);
   syncPropertySwitch();
   syncFilingSwitch();
 }
 
 function syncPropertySwitch() {
   dom.propertySwitch.querySelectorAll("[data-property]").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.property === state.selectedProperty);
+    const isActive = button.dataset.property === state.selectedProperty;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-checked", String(isActive));
+    button.tabIndex = isActive ? 0 : -1;
   });
 }
 
 function syncFilingSwitch() {
   dom.filingSwitch.querySelectorAll("[data-filing]").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.filing === state.filingStatus);
+    const isActive = button.dataset.filing === state.filingStatus;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-checked", String(isActive));
+    button.tabIndex = isActive ? 0 : -1;
   });
 }
 
@@ -220,6 +247,7 @@ function render() {
   syncInputsWithState();
   const scenario = calculateScenario();
   renderHeroFacts(scenario);
+  renderHeroAssumptions(scenario);
   renderSummary(scenario);
   renderChart(scenario);
   renderTable(scenario);
@@ -231,10 +259,15 @@ function calculateScenario() {
   const property = properties[state.selectedProperty];
   const propertyInput = state.propertyInputs[property.id];
   const apartmentPrice = propertyInput.price;
-  const includeParking = state.parkingEnabled;
+  const includeParking = propertyInput.parkingEnabled;
   const parkingPrice = includeParking ? 49900 : 0;
   const purchasePrice = apartmentPrice + parkingPrice;
   const ancillaryCosts = purchasePrice * ANCILLARY_COST_RATE;
+  const totalAcquisition = purchasePrice + ancillaryCosts;
+  const equityContribution = clamp(propertyInput.equityContribution, 0, totalAcquisition);
+  const financingNeed = Math.max(0, totalAcquisition - equityContribution);
+  const isOver100Financing = financingNeed > purchasePrice;
+  const bankRateApplied = state.marketRate + (isOver100Financing ? OVER_100_FINANCE_SURCHARGE : 0);
   const apartmentRentMonthly = property.area * propertyInput.rentPerSqm;
   const parkingRentMonthly = includeParking ? 140 : 0;
   const totalRentMonthlyStart = apartmentRentMonthly + parkingRentMonthly;
@@ -246,10 +279,22 @@ function calculateScenario() {
   const parkingSeMonthly = includeParking ? 2 * (1 + VAT_RATE) : 0;
   const ownerCashCostsMonthly = apartmentWegMonthly + apartmentSeMonthly + reserveMonthly + parkingWegMonthly + parkingSeMonthly;
 
-  const kfwPrincipal = state.useKfw ? Math.min(KFW_MAX_PER_UNIT, apartmentPrice) : 0;
-  const bankPrincipal = Math.max(0, purchasePrice - kfwPrincipal);
-  const bankSchedule = buildLoanSchedule(bankPrincipal, state.marketRate, state.marketRepayment, state.horizon);
-  const kfwSchedule = buildLoanSchedule(kfwPrincipal, state.kfwRate, state.kfwRepayment, state.horizon);
+  const kfwPrincipal = state.useKfw ? Math.min(KFW_MAX_PER_UNIT, apartmentPrice, financingNeed) : 0;
+  const bankPrincipal = Math.max(0, financingNeed - kfwPrincipal);
+  const bankSchedule = buildLoanSchedule({
+    principal: bankPrincipal,
+    annualRate: bankRateApplied,
+    repaymentRate: state.marketRepayment,
+    years: state.horizon
+  });
+  const kfwSchedule = buildLoanSchedule({
+    principal: kfwPrincipal,
+    annualRate: state.kfwRate,
+    repaymentRate: state.kfwRepayment,
+    years: state.horizon,
+    followUpRate: bankRateApplied,
+    switchAfterYear: KFW_FIXED_RATE_YEARS
+  });
 
   const buildingBasis = apartmentPrice * BUILDING_SHARE;
   const specialBasis = Math.min(buildingBasis, property.area * SPECIAL_AFA_CAP_PER_SQM);
@@ -258,17 +303,22 @@ function calculateScenario() {
   const yearlyRows = [];
   const churchRate = state.churchTaxEnabled ? state.churchTaxRate / 100 : 0;
   const baseTax = calculateTotalTax(state.annualIncome, state.filingStatus, churchRate);
+  const depotReturn = state.depotReturn / 100;
+  let investmentSideAccount = 0;
+  let comparisonDepotBalance = equityContribution;
 
   for (let year = 1; year <= state.horizon; year += 1) {
     const growthFactor = (1 + state.rentGrowth / 100) ** (year - 1);
+    const inflationFactor = (1 + COST_INFLATION_RATE) ** (year - 1);
     const annualRent = totalRentMonthlyStart * 12 * growthFactor;
-    const ownerCashCostsAnnual = ownerCashCostsMonthly * 12;
+    const ownerCashCostsAnnual = ownerCashCostsMonthly * 12 * inflationFactor;
+    const reserveAnnual = reserveMonthly * 12 * inflationFactor;
     const financingInterest = bankSchedule[year - 1].interest + kfwSchedule[year - 1].interest;
     const financingPrincipal = bankSchedule[year - 1].principal + kfwSchedule[year - 1].principal;
     const financingPayments = bankSchedule[year - 1].payment + kfwSchedule[year - 1].payment;
     const annualDepreciation = depreciation[year - 1].regular + depreciation[year - 1].special;
     const preTaxCashFlow = annualRent - ownerCashCostsAnnual - financingPayments;
-    const taxableRentalResult = annualRent - ownerCashCostsAnnual + reserveMonthly * 12 - financingInterest - annualDepreciation;
+    const taxableRentalResult = annualRent - ownerCashCostsAnnual + reserveAnnual - financingInterest - annualDepreciation;
     const taxWithInvestment = calculateTotalTax(
       Math.max(0, state.annualIncome + taxableRentalResult),
       state.filingStatus,
@@ -277,6 +327,14 @@ function calculateScenario() {
     const taxEffect = baseTax - taxWithInvestment;
     const afterTaxCashFlow = preTaxCashFlow + taxEffect;
     const propertyValue = purchasePrice * (1 + state.valueGrowth / 100) ** year;
+    const remainingDebt = bankSchedule[year - 1].endingBalance + kfwSchedule[year - 1].endingBalance;
+    const propertyNetEquity = propertyValue - remainingDebt;
+
+    investmentSideAccount = investmentSideAccount * (1 + depotReturn) + afterTaxCashFlow;
+    comparisonDepotBalance = comparisonDepotBalance * (1 + depotReturn) + Math.max(-afterTaxCashFlow, 0);
+    const wealthWithInvestment = propertyNetEquity + investmentSideAccount;
+    const wealthWithoutInvestment = comparisonDepotBalance;
+    const wealthDelta = wealthWithInvestment - wealthWithoutInvestment;
 
     yearlyRows.push({
       year,
@@ -289,6 +347,13 @@ function calculateScenario() {
       taxEffect,
       afterTaxCashFlow,
       propertyValue,
+      remainingDebt,
+      propertyNetEquity,
+      wealthWithInvestment,
+      wealthWithoutInvestment,
+      wealthDelta,
+      investmentSideAccount,
+      comparisonDepotBalance,
       monthlyPreTax: preTaxCashFlow / 12,
       monthlyAfterTax: afterTaxCashFlow / 12,
       bankBalance: bankSchedule[year - 1].endingBalance,
@@ -299,12 +364,19 @@ function calculateScenario() {
   const firstYear = yearlyRows[0];
   const finalYear = yearlyRows[yearlyRows.length - 1];
   const cumulativeAfterTax = yearlyRows.reduce((sum, row) => sum + row.afterTaxCashFlow, 0);
+  const financingQuote = purchasePrice > 0 ? financingNeed / purchasePrice : 0;
+  const grossYield = purchasePrice > 0 ? annualize(totalRentMonthlyStart) / purchasePrice : 0;
 
   return {
     property,
     apartmentPrice,
     purchasePrice,
     ancillaryCosts,
+    totalAcquisition,
+    equityContribution,
+    financingNeed,
+    isOver100Financing,
+    bankRateApplied,
     totalRentMonthlyStart,
     ownerCashCostsMonthly,
     kfwPrincipal,
@@ -313,18 +385,32 @@ function calculateScenario() {
     firstYear,
     finalYear,
     cumulativeAfterTax,
-    grossYield: annualize(totalRentMonthlyStart) / purchasePrice,
-    remainingDebt: finalYear.bankBalance + finalYear.kfwBalance
+    financingQuote,
+    grossYield,
+    remainingDebt: finalYear.remainingDebt
   };
 }
 
-function buildLoanSchedule(principal, annualRate, repaymentRate, years) {
-  const monthlyRate = annualRate / 100 / 12;
-  const monthlyPayment = principal > 0 ? principal * ((annualRate + repaymentRate) / 100) / 12 : 0;
+function buildLoanSchedule({
+  principal,
+  annualRate,
+  repaymentRate,
+  years,
+  followUpRate = annualRate,
+  switchAfterYear = years
+}) {
   let balance = principal;
   const schedule = [];
+  let activeRate = annualRate;
+  let monthlyPayment = principal > 0 ? principal * ((activeRate + repaymentRate) / 100) / 12 : 0;
 
   for (let year = 1; year <= years; year += 1) {
+    if (year === switchAfterYear + 1) {
+      activeRate = followUpRate;
+      monthlyPayment = balance > 0 ? balance * ((activeRate + repaymentRate) / 100) / 12 : 0;
+    }
+
+    const monthlyRate = activeRate / 100 / 12;
     let interest = 0;
     let principalPaid = 0;
     let payments = 0;
@@ -349,7 +435,8 @@ function buildLoanSchedule(principal, annualRate, repaymentRate, years) {
       interest,
       principal: principalPaid,
       payment: payments,
-      endingBalance: balance
+      endingBalance: balance,
+      rate: activeRate
     });
   }
 
@@ -421,8 +508,8 @@ function calculateSoli(incomeTax, filingStatus) {
 
 function renderHeroFacts(scenario) {
   const facts = [
-    { value: formatCurrency(scenario.purchasePrice, 0), label: "Modellierter Kaufpreis" },
     { value: formatCurrency(scenario.firstYear.monthlyAfterTax, 0, true), label: "Monatlich nach Steuer in Jahr 1" },
+    { value: formatCurrency(scenario.finalYear.wealthDelta, 0, true), label: `Vorteil / Nachteil in Jahr ${state.horizon}` },
     { value: formatCurrency(scenario.ancillaryCosts, 0), label: "Einmalige Erwerbsnebenkosten" }
   ];
 
@@ -434,42 +521,77 @@ function renderHeroFacts(scenario) {
   `).join("");
 }
 
+function renderHeroAssumptions(scenario) {
+  const items = [
+    {
+      label: "Vergleichsdepot",
+      value: formatPercent(state.depotReturn, 2),
+      note: "Defensive Vermögensverwaltung als Benchmark."
+    },
+    {
+      label: "Bankzins",
+      value: formatPercent(scenario.bankRateApplied, 2),
+      note: scenario.isOver100Financing ? "inkl. 0,50 %-Punkte Zuschlag für >100 % Finanzierung" : "ohne Zuschlag für >100 % Finanzierung"
+    },
+    {
+      label: "KfW 298",
+      value: state.useKfw ? `${formatPercent(state.kfwRate, 2)} bis Jahr ${KFW_FIXED_RATE_YEARS}` : "nicht genutzt",
+      note: state.useKfw ? `ab Jahr ${KFW_FIXED_RATE_YEARS + 1} mit Bankzins fortgeschrieben` : "reine Bankfinanzierung"
+    },
+    {
+      label: "Wachstum",
+      value: `${formatPercent(state.rentGrowth, 2)} Miete | ${formatPercent(state.valueGrowth, 2)} Wert`,
+      note: `Kosteninflation ${formatPercent(COST_INFLATION_RATE * 100, 2)} p.a.`
+    }
+  ];
+
+  dom.heroAssumptions.innerHTML = items.map((item) => `
+    <div>
+      <span class="source-label">${item.label}</span>
+      <strong>${item.value}</strong>
+      <span class="source-note">${item.note}</span>
+    </div>
+  `).join("");
+}
+
 function renderSummary(scenario) {
   const cards = [
     {
-      title: "Jahr 1 vor Steuer",
-      value: formatCurrency(scenario.firstYear.preTaxCashFlow, 0, true),
-      note: `${formatCurrency(scenario.firstYear.monthlyPreTax, 0, true)} pro Monat`,
-      stateClass: scenario.firstYear.preTaxCashFlow >= 0 ? "is-positive" : "is-negative"
+      title: "Monatlich nach Steuer in Jahr 1",
+      value: formatCurrency(scenario.firstYear.monthlyAfterTax, 0, true),
+      note: `${formatCurrency(scenario.firstYear.afterTaxCashFlow, 0, true)} im ersten Jahr`,
+      stateClass: scenario.firstYear.monthlyAfterTax >= 0 ? "is-positive" : "is-negative"
     },
     {
-      title: "Jahr 1 nach Steuer",
-      value: formatCurrency(scenario.firstYear.afterTaxCashFlow, 0, true),
-      note: `${formatCurrency(scenario.firstYear.monthlyAfterTax, 0, true)} pro Monat`,
-      stateClass: scenario.firstYear.afterTaxCashFlow >= 0 ? "is-positive" : "is-negative"
+      title: `Vermögen mit Investment in Jahr ${state.horizon}`,
+      value: formatCurrency(scenario.finalYear.wealthWithInvestment, 0, true),
+      note: `Objektvermögen plus laufende Nachsteuer-Liquidität`,
+      stateClass: scenario.finalYear.wealthWithInvestment >= 0 ? "is-positive" : "is-negative"
     },
     {
-      title: "Steuerwirkung Jahr 1",
-      value: formatCurrency(scenario.firstYear.taxEffect, 0, true),
-      note: `inkl. ESt, Soli${state.churchTaxEnabled ? ` und ${state.churchTaxRate} % Kirchensteuer` : ""}`,
-      stateClass: scenario.firstYear.taxEffect >= 0 ? "is-positive" : "is-negative"
+      title: `Vermögen ohne Investment in Jahr ${state.horizon}`,
+      value: formatCurrency(scenario.finalYear.wealthWithoutInvestment, 0, true),
+      note: `Eigenkapital plus vermiedene Belastungen im Vergleichsdepot`,
+      stateClass: scenario.finalYear.wealthWithoutInvestment >= 0 ? "is-positive" : "is-negative"
     },
     {
-      title: `Objektwert in Jahr ${state.horizon}`,
-      value: formatCurrency(scenario.finalYear.propertyValue, 0),
-      note: `Restschuld ${formatCurrency(scenario.remainingDebt, 0)}`,
+      title: "Vorteil / Nachteil vs. Vergleichsdepot",
+      value: formatCurrency(scenario.finalYear.wealthDelta, 0, true),
+      note: `Differenz der beiden Vermögenspfade in Jahr ${state.horizon}`,
+      stateClass: scenario.finalYear.wealthDelta >= 0 ? "is-positive" : "is-negative"
+    },
+    {
+      title: "Eigenkapital / Erwerbsnebenkosten",
+      value: `${formatCurrency(scenario.equityContribution, 0)} / ${formatCurrency(scenario.ancillaryCosts, 0)}`,
+      note: `Finanzierungsbedarf ${formatCurrency(scenario.financingNeed, 0)} bei ${formatPercent(scenario.financingQuote * 100, 1)}`,
       stateClass: ""
     },
     {
-      title: "Kumuliert nach Steuer",
-      value: formatCurrency(scenario.cumulativeAfterTax, 0, true),
-      note: `${formatPercent(scenario.grossYield * 100, 2)} Bruttomietrendite zum Start`,
-      stateClass: scenario.cumulativeAfterTax >= 0 ? "is-positive" : "is-negative"
-    },
-    {
-      title: "KfW / Bank",
-      value: `${formatCurrency(scenario.kfwPrincipal, 0)} / ${formatCurrency(scenario.bankPrincipal, 0)}`,
-      note: state.useKfw ? "KfW 298 plus Bankdarlehen" : "reine Bankfinanzierung",
+      title: "Finanzierungsstruktur",
+      value: `${formatCurrency(scenario.bankPrincipal, 0)} Bank${state.useKfw ? ` | ${formatCurrency(scenario.kfwPrincipal, 0)} KfW` : ""}`,
+      note: state.useKfw
+        ? `Bankzins ${formatPercent(scenario.bankRateApplied, 2)}, KfW bis Jahr ${KFW_FIXED_RATE_YEARS} mit ${formatPercent(state.kfwRate, 2)}`
+        : `reine Bankfinanzierung mit ${formatPercent(scenario.bankRateApplied, 2)}`,
       stateClass: ""
     }
   ];
@@ -548,14 +670,14 @@ function renderTable(scenario) {
       <tr class="${isHighlight}">
         <td>Jahr ${row.year}</td>
         <td>${formatCurrency(row.annualRent, 0)}</td>
-        <td>${formatCurrency(row.interest, 0)}</td>
-        <td>${formatCurrency(row.principal, 0)}</td>
-        <td>${formatCurrency(row.ownerCashCostsAnnual, 0)}</td>
-        <td>${formatCurrency(row.annualDepreciation, 0)}</td>
         <td class="${row.preTaxCashFlow >= 0 ? "value-positive" : "value-negative"}">${formatCurrency(row.preTaxCashFlow, 0, true)}</td>
         <td class="${row.taxEffect >= 0 ? "value-positive" : "value-negative"}">${formatCurrency(row.taxEffect, 0, true)}</td>
         <td class="${row.afterTaxCashFlow >= 0 ? "value-positive" : "value-negative"}">${formatCurrency(row.afterTaxCashFlow, 0, true)}</td>
         <td>${formatCurrency(row.propertyValue, 0)}</td>
+        <td>${formatCurrency(row.remainingDebt, 0)}</td>
+        <td class="${row.wealthWithInvestment >= 0 ? "value-positive" : "value-negative"}">${formatCurrency(row.wealthWithInvestment, 0, true)}</td>
+        <td class="${row.wealthWithoutInvestment >= 0 ? "value-positive" : "value-negative"}">${formatCurrency(row.wealthWithoutInvestment, 0, true)}</td>
+        <td class="${row.wealthDelta >= 0 ? "value-positive" : "value-negative"}">${formatCurrency(row.wealthDelta, 0, true)}</td>
       </tr>
     `;
   }).join("");
@@ -565,7 +687,7 @@ function renderPropertyCards() {
   dom.propertyCards.innerHTML = Object.values(properties).map((property) => {
     const assumption = state.propertyInputs[property.id];
     const isSelected = property.id === state.selectedProperty;
-    const rentMonthly = property.area * assumption.rentPerSqm + (property.recommendedParking ? 140 : 0);
+    const rentMonthly = property.area * assumption.rentPerSqm + (assumption.parkingEnabled ? 140 : 0);
     return `
       <article class="property-card ${isSelected ? "is-selected" : ""}">
         <div class="property-top">
@@ -597,7 +719,7 @@ function renderPropertyCards() {
           </div>
           <p class="property-note">${property.excerptNote}</p>
           <div class="property-actions">
-            <span class="property-note">${property.parkingNote}</span>
+            <span class="property-note">${assumption.parkingEnabled ? "TG-Stellplatz aktuell eingerechnet." : property.parkingNote}</span>
             <button class="property-button" type="button" data-select-property="${property.id}">
               ${isSelected ? "Aktive Kalkulation" : "Für Kalkulation nutzen"}
             </button>
@@ -613,12 +735,41 @@ function renderAssumptionNotes(scenario) {
   const notes = [
     `Musterpreis ${property.id === "a64" ? "aus Preisuntergrenze" : "aus Preisobergrenze"} des Verkaufsdatenblatts vorbelegt.`,
     `Mietansatz ${formatNumber(state.propertyInputs[property.id].rentPerSqm, 2)} €/m² aus Mietband 18,00 bis 25,00 €/m² vorbelegt.`,
-    `Erwerbsnebenkosten pauschal mit ${formatPercent(ANCILLARY_COST_RATE * 100, 1)} angesetzt, gemäß Verkaufsdatenblatt.`,
+    `Erwerbsnebenkosten werden separat mit ${formatPercent(ANCILLARY_COST_RATE * 100, 1)} ausgewiesen und in der Vermögenslogik berücksichtigt.`,
+    `Vergleichsdepot mit ${formatPercent(state.depotReturn, 2)} p.a.; dort wird Eigenkapital und nur die vermiedene Immobilienbelastung angelegt.`,
+    scenario.isOver100Financing
+      ? `Die Finanzierung liegt über 100 % des Kaufpreises; auf den Bankzins wurden deshalb 0,50 %-Punkte aufgeschlagen.`
+      : `Die Finanzierung liegt nicht über 100 % des Kaufpreises; es wird kein Zinsaufschlag für Vollfinanzierung angesetzt.`,
     `Steuermodell mit § 32a EStG 2026, Soli-Freigrenze 40.700 € bzw. 81.400 € im Splitting und optionaler Kirchensteuer.`,
-    `AfA-Modell mit 5 % degressivem Satz auf ${formatPercent(BUILDING_SHARE * 100, 0)} % Gebäudeanteil sowie Sonder-AfA nach § 7b EStG.`
+    `AfA-Modell mit 5 % degressivem Satz auf ${formatPercent(BUILDING_SHARE * 100, 0)} Gebäudeanteil sowie Sonder-AfA nach § 7b EStG.`,
+    `Mietausfall wird angesprochen, aber im Basisszenario nicht eingerechnet. Kosten steigen mit ${formatPercent(COST_INFLATION_RATE * 100, 2)} p.a.; Exit-Kosten bleiben unberücksichtigt.`
   ];
 
   dom.assumptionNotes.innerHTML = notes.map((note) => `<div class="assumption-note">${note}</div>`).join("");
+}
+
+function bindSegmentedKeyboard(container, dataAttribute) {
+  container.addEventListener("keydown", (event) => {
+    const isForward = event.key === "ArrowRight" || event.key === "ArrowDown";
+    const isBackward = event.key === "ArrowLeft" || event.key === "ArrowUp";
+
+    if (!isForward && !isBackward) {
+      return;
+    }
+
+    const buttons = [...container.querySelectorAll(`[${dataAttribute}]`)];
+    const currentIndex = buttons.indexOf(document.activeElement);
+
+    if (currentIndex === -1) {
+      return;
+    }
+
+    event.preventDefault();
+    const direction = isForward ? 1 : -1;
+    const nextIndex = (currentIndex + direction + buttons.length) % buttons.length;
+    buttons[nextIndex].focus();
+    buttons[nextIndex].click();
+  });
 }
 
 function annualize(monthlyAmount) {

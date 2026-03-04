@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Das Ebert | Liquiditätsdashboard</title>
+  <title>Das Ebert | Investmentvergleich</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -18,33 +18,17 @@
         </div>
         <div class="hero-grid">
           <section class="hero-copy">
-            <p class="kicker">Liquidität vor und nach Steuern</p>
-            <h1>Immobilien-Investment "Das Ebert"</h1>
+            <p class="kicker">Liquidität und Vermögensvergleich</p>
+            <h1>Was bedeutet "Das Ebert" für Ihr Vermögen in 20 Jahren?</h1>
             <p class="hero-text">
-              Die Kalkulation basiert auf Exposé, Verkaufsdatenblatt, aktuellen 2026-Steuertarifen
-              sowie vorbelegten Finanzierungsannahmen für KfW 298 und 100 %-Finanzierung.
+              Mit wenigen Eingaben sehen Sie, wie sich das Investment auf Ihre monatliche Liquidität
+              auswirken kann und wie es im selben Zeitraum gegen ein defensives Vergleichsdepot abschneidet.
             </p>
             <div class="hero-facts" id="hero-facts"></div>
           </section>
           <aside class="hero-panel card">
-            <p class="panel-kicker">Aktuelle Vorbelegung</p>
-            <div class="source-stack">
-              <div>
-                <span class="source-label">KfW 298</span>
-                <strong>0,60 % effektiv</strong>
-                <span class="source-note">10 Jahre Zinsbindung, Stand 27.02.2026</span>
-              </div>
-              <div>
-                <span class="source-label">100 %-Finanzierung</span>
-                <strong>4,05 % Szenariozins</strong>
-                <span class="source-note">editable Marktannahme auf Basis aktueller Interhyp-Zinslage</span>
-              </div>
-              <div>
-                <span class="source-label">Steuer</span>
-                <strong>Tarif 2026</strong>
-                <span class="source-note">Grundtabelle oder Splitting inkl. Soli und Kirchensteuer</span>
-              </div>
-            </div>
+            <p class="panel-kicker">Aktuelle Modellannahmen</p>
+            <div class="source-stack" id="hero-assumptions"></div>
           </aside>
         </div>
       </div>
@@ -57,30 +41,36 @@
             <div class="section-head">
               <div>
                 <p class="section-kicker">Eingaben</p>
-                <h2>Berechnung steuern</h2>
+                <h2>Ihre Ausgangslage</h2>
               </div>
               <span class="badge">max. 20 Jahre</span>
             </div>
 
             <div class="field-group">
               <span class="field-label">Wohnung wählen</span>
-              <div class="segmented" id="property-switch" role="tablist" aria-label="Wohnungsauswahl">
-                <button class="segment is-active" type="button" data-property="a64">1-Raum</button>
-                <button class="segment" type="button" data-property="a60">5-Raum</button>
+              <div class="segmented" id="property-switch" role="radiogroup" aria-label="Wohnungsauswahl">
+                <button class="segment is-active" type="button" role="radio" aria-checked="true" data-property="a64">1-Raum</button>
+                <button class="segment" type="button" role="radio" aria-checked="false" data-property="a60">5-Raum</button>
               </div>
             </div>
 
             <div class="form-grid">
               <label class="field">
-                <span class="field-label">Steuerliches Jahreseinkommen (zvE)</span>
+                <span class="field-label">Steuerliches Jahreseinkommen</span>
                 <input id="annual-income" type="number" min="0" step="1000" value="90000">
-                <small>Haushaltseinkommen als Näherung für das zu versteuernde Einkommen.</small>
+                <small>Als Näherung für Ihre persönliche Steuerbelastung.</small>
+              </label>
+
+              <label class="field">
+                <span class="field-label">Eigenkapital</span>
+                <input id="equity-input" type="number" min="0" step="1000">
+                <small>Wie viel Sie aus eigenen Mitteln in den Kauf einbringen möchten.</small>
               </label>
 
               <label class="field">
                 <span class="field-label">Anlagehorizont</span>
                 <input id="horizon" type="number" min="5" max="20" step="1" value="20">
-                <small>Diagramm und Tabelle laufen bis zu diesem Jahr.</small>
+                <small>Diagramm, Vermögensvergleich und Tabelle laufen bis zu diesem Jahr.</small>
               </label>
 
               <label class="field">
@@ -97,29 +87,29 @@
 
               <label class="field">
                 <span class="field-label">Mietsteigerung p.a.</span>
-                <input id="rent-growth" type="number" min="0" max="8" step="0.25" value="3">
-                <small>Exposé-Vorbelegung ab Jahr 4: 3 %.</small>
+                <input id="rent-growth" type="number" min="0" max="8" step="0.25" value="1">
+                <small>Vorbelegt mit 1 % p.a. für ein vorsichtiges Basisszenario.</small>
               </label>
 
               <label class="field">
                 <span class="field-label">Immobilienwertsteigerung p.a.</span>
-                <input id="value-growth" type="number" min="0" max="8" step="0.25" value="2">
-                <small>Nur für Vermögenssicht, nicht für Liquidität.</small>
+                <input id="value-growth" type="number" min="0" max="8" step="0.25" value="1">
+                <small>Vorbelegt mit 1 % p.a. für die Vermögenssicht.</small>
               </label>
             </div>
 
             <div class="field-group">
               <span class="field-label">Steuertabelle</span>
-              <div class="segmented" id="filing-switch" role="tablist" aria-label="Steuertabelle">
-                <button class="segment is-active" type="button" data-filing="single">Grundtabelle</button>
-                <button class="segment" type="button" data-filing="splitting">Splitting</button>
+              <div class="segmented" id="filing-switch" role="radiogroup" aria-label="Steuertabelle">
+                <button class="segment is-active" type="button" role="radio" aria-checked="true" data-filing="single">Grundtabelle</button>
+                <button class="segment" type="button" role="radio" aria-checked="false" data-filing="splitting">Splitting</button>
               </div>
             </div>
 
             <div class="toggle-row">
               <label class="toggle">
                 <input id="church-enabled" type="checkbox" checked>
-                <span>Kirchensteuer berücksichtigen</span>
+                <span>Kirchensteuer einrechnen</span>
               </label>
               <label class="field inline-field">
                 <span class="field-label">Kirchensteuer</span>
@@ -145,28 +135,34 @@
           <article class="card assumptions-card">
             <div class="section-head">
               <div>
-                <p class="section-kicker">Finanzierung</p>
-                <h2>Vorbelegte Konditionen</h2>
+                <p class="section-kicker">Vergleich &amp; Finanzierung</p>
+                <h2>Depot und Darlehen</h2>
               </div>
             </div>
 
             <div class="form-grid">
               <label class="field">
+                <span class="field-label">Vergleichsdepot p.a.</span>
+                <input id="depot-return" type="number" min="0" max="12" step="0.1" value="5">
+                <small>Defensive Vermögensverwaltung als Vergleich zur Immobilie.</small>
+              </label>
+
+              <label class="field">
                 <span class="field-label">Marktzins 100 %-Finanzierung</span>
                 <input id="market-rate" type="number" min="0" max="10" step="0.01" value="4.05">
-                <small>Frei editierbar.</small>
+                <small>Bei mehr als 100 % Finanzierung werden 0,50 %-Punkte aufgeschlagen.</small>
               </label>
 
               <label class="field">
                 <span class="field-label">Anfängliche Tilgung Bank</span>
                 <input id="market-repayment" type="number" min="0.5" max="10" step="0.1" value="2">
-                <small>Vorbelegt mit konservativem Annuitätenansatz.</small>
+                <small>Für das Basisszenario konservativ vorbelegt.</small>
               </label>
 
               <label class="field">
                 <span class="field-label">KfW-Zins</span>
                 <input id="kfw-rate" type="number" min="0" max="10" step="0.01" value="0.60">
-                <small>Stand 27.02.2026.</small>
+                <small>Wird nur für die erste Förderphase angesetzt.</small>
               </label>
 
               <label class="field">
@@ -187,7 +183,7 @@
             <div class="section-head">
               <div>
                 <p class="section-kicker">20-Jahres-Sicht</p>
-                <h2>Monatliche Belastung oder monatlicher Zufluss</h2>
+                <h2>Monatliche Wirkung aus dem Investment</h2>
               </div>
               <div class="legend">
                 <span class="legend-item">
@@ -208,8 +204,8 @@
           <article class="card table-card">
             <div class="section-head">
               <div>
-                <p class="section-kicker">Jahreswerte</p>
-                <h2>Liquidität, Steuereffekt und Wertentwicklung</h2>
+                <p class="section-kicker">Jahresvergleich</p>
+                <h2>Liquidität und Vermögensaufbau</h2>
               </div>
             </div>
             <div class="table-scroll">
@@ -218,14 +214,14 @@
                   <tr>
                     <th>Jahr</th>
                     <th>Miete p.a.</th>
-                    <th>Zinsen p.a.</th>
-                    <th>Tilgung p.a.</th>
-                    <th>Kosten p.a.</th>
-                    <th>AfA p.a.</th>
                     <th>vor Steuer</th>
                     <th>Steuerwirkung</th>
                     <th>nach Steuer</th>
                     <th>Objektwert</th>
+                    <th>Restschuld</th>
+                    <th>Vermögen mit Immo</th>
+                    <th>Depot ohne Immo</th>
+                    <th>Vorteil / Nachteil</th>
                   </tr>
                 </thead>
                 <tbody id="yearly-table"></tbody>
@@ -257,7 +253,7 @@
           <img class="media-image" src="assets/interior-collage.png" alt="Innenraum und Küche aus dem Exposé">
           <p class="media-copy">
             Die Bildwelt stammt direkt aus dem Exposé und dient hier als vertriebliche Einordnung
-            der Wohnqualität, nicht als Beschaffenheitsgarantie.
+            der Wohnqualität. Sie hilft, die nüchternen Zahlen mit dem Projekt selbst zu verknüpfen.
           </p>
         </article>
 
@@ -271,8 +267,8 @@
           <img class="media-image" src="assets/afa-graphic.png" alt="AfA-Grafik aus dem Exposé">
           <p class="media-copy">
             Die App rechnet mit der im Projektmaterial hervorgehobenen degressiven AfA plus
-            Sonder-AfA nach § 7b EStG. Die verwendete Einheitspreis- und Gebäudeanteilsannahme
-            bleibt dennoch vereinfacht.
+            Sonder-AfA nach § 7b EStG. Die Modellierung bleibt trotzdem eine Schnellkalkulation
+            und ersetzt keine individuelle Steuerprüfung.
           </p>
         </article>
       </section>
@@ -287,19 +283,23 @@
         <div class="disclaimer-copy">
           <p>
             Dieses Dashboard ist eine vertriebliche Schnellkalkulation und ersetzt weder Steuer-,
-            Rechts- noch Finanzierungsberatung. Es modelliert das Einkommen vereinfacht als
-            steuerliches Jahreseinkommen, unterstellt volle Jahresmieten ab Jahr 1 und verwendet
-            nicht für jede Einheit verifizierte Einzelpreise.
+            Rechts- noch Finanzierungsberatung. Es modelliert Ihr Einkommen vereinfacht als
+            steuerliches Jahreseinkommen und zeigt nominale Vermögenswerte, keine auf heutige
+            Kaufkraft diskontierten Realwerte.
           </p>
           <p>
             Da das vorliegende Verkaufsdatenblatt nur Preis- und Mietspannen enthält, werden die
-            beiden Musterwohnungen mit Preisuntergrenze bzw. Preisobergrenze sowie mit einer
-            passenden Mietannahme aus der Spannbreite vorbelegt. Sämtliche Annahmen können
-            im Dashboard überschrieben werden.
+            beiden Musterwohnungen mit passenden Bandbreiten vorbelegt. Das Verkaufsdatenblatt
+            fließt intern in die Modellannahmen ein, wird aber in der öffentlichen Version nicht
+            direkt verlinkt. Sämtliche Annahmen im Dashboard können überschrieben werden.
+          </p>
+          <p>
+            Mietausfall, Exit-Kosten und individuelle Anschlussfinanzierungen sind in diesem
+            Basisszenario nicht vollständig modelliert. Kosten werden mit 2 % Inflation fortgeschrieben;
+            Miet- und Immobilienwertentwicklung sind konservativ mit 1 % p.a. vorbelegt.
           </p>
           <ul class="source-list">
             <li><a href="Exposé%20-%20das%20ebert.pdf" target="_blank" rel="noreferrer">Exposé „Das Ebert“</a></li>
-            <li><a href="Verkaufsdatenblatt.jpg" target="_blank" rel="noreferrer">Verkaufsdatenblatt „Das Ebert“</a></li>
             <li><a href="https://www.gesetze-im-internet.de/estg/__32a.html" target="_blank" rel="noreferrer">§ 32a EStG, Einkommensteuertarif 2026</a></li>
             <li><a href="https://www.bundesfinanzministerium.de/Monatsberichte/2025/10/Inhalte/Kapitel-3-Analysen/3-2-schutz-vor-kalter-progression-zum-1-januar-2026.html" target="_blank" rel="noreferrer">BMF: Schutz vor kalter Progression zum 1. Januar 2026</a></li>
             <li><a href="https://www.kfw.de/inlandsfoerderung/Unternehmen/Wohngeb%C3%A4ude/F%C3%B6rderprodukte/Klimafreundlicher-Neubau-Wohngeb%C3%A4ude-(298)/" target="_blank" rel="noreferrer">KfW 298 Produktseite</a></li>
