@@ -14,6 +14,13 @@ const properties = {
     title: "WE A 64 | 5. OG",
     subtitle: "Musterwohnung auf Basis des kleinsten Preisbands",
     rooms: "1-Raum-Wohnung",
+    positioning: "Kompakter Einstieg in das Projekt",
+    story: "Für Kunden, die erst verstehen wollen, wie sich eine kleinere Einheit auf Liquidität und Vermögen auswirkt.",
+    highlights: [
+      "Klar strukturierter 1-Raum-Grundriss aus dem Exposé",
+      "Niedrigere Einstiegshürde als bei den größeren Einheiten",
+      "TG-Stellplatz ist hier nicht automatisch Teil des Szenarios"
+    ],
     area: 30.17,
     defaultPrice: 187000,
     defaultRentPerSqm: 25,
@@ -28,6 +35,13 @@ const properties = {
     title: "WE A 60 | 5. OG",
     subtitle: "Musterwohnung auf Basis des größten Preisbands",
     rooms: "5-Raum-Wohnung",
+    positioning: "Große Einheit mit stärkerer Objektpräsenz",
+    story: "Für Kunden, die mehr Fläche, mehr Sichtbarkeit im Projekt und eine andere Größenordnung im Vermögensaufbau vergleichen wollen.",
+    highlights: [
+      "Großzügiger Grundriss mit mehreren separat nutzbaren Zimmern",
+      "Mehr Wohnfläche und damit ein anderes Miet- und Kaufprofil",
+      "TG-Stellplatz ist hier als realistischer Standard vorbelegt"
+    ],
     area: 124.36,
     defaultPrice: 932000,
     defaultRentPerSqm: 18,
@@ -80,7 +94,6 @@ function init() {
 
 function captureDom() {
   dom.heroFacts = document.getElementById("hero-facts");
-  dom.heroAssumptions = document.getElementById("hero-assumptions");
   dom.propertySwitch = document.getElementById("property-switch");
   dom.filingSwitch = document.getElementById("filing-switch");
   dom.annualIncome = document.getElementById("annual-income");
@@ -247,7 +260,6 @@ function render() {
   syncInputsWithState();
   const scenario = calculateScenario();
   renderHeroFacts(scenario);
-  renderHeroAssumptions(scenario);
   renderSummary(scenario);
   renderChart(scenario);
   renderTable(scenario);
@@ -508,9 +520,9 @@ function calculateSoli(incomeTax, filingStatus) {
 
 function renderHeroFacts(scenario) {
   const facts = [
-    { value: formatCurrency(scenario.firstYear.monthlyAfterTax, 0, true), label: "Monatlich nach Steuer in Jahr 1" },
-    { value: formatCurrency(scenario.finalYear.wealthDelta, 0, true), label: `Vorteil / Nachteil in Jahr ${state.horizon}` },
-    { value: formatCurrency(scenario.ancillaryCosts, 0), label: "Einmalige Erwerbsnebenkosten" }
+    { value: formatCurrency(scenario.firstYear.monthlyAfterTax, 0, true), label: "Monatliche Wirkung nach Steuer im Startjahr" },
+    { value: formatCurrency(scenario.finalYear.wealthDelta, 0, true), label: `Mehr- oder Mindervermögen bis Jahr ${state.horizon}` },
+    { value: formatCurrency(scenario.equityContribution + scenario.ancillaryCosts, 0), label: "Kapital zum Start aus Eigenkapital und Nebenkosten" }
   ];
 
   dom.heroFacts.innerHTML = facts.map((fact) => `
@@ -521,85 +533,59 @@ function renderHeroFacts(scenario) {
   `).join("");
 }
 
-function renderHeroAssumptions(scenario) {
-  const items = [
-    {
-      label: "Vergleichsdepot",
-      value: formatPercent(state.depotReturn, 2),
-      note: "Defensive Vermögensverwaltung als Benchmark."
-    },
-    {
-      label: "Bankzins",
-      value: formatPercent(scenario.bankRateApplied, 2),
-      note: scenario.isOver100Financing ? "inkl. 0,50 %-Punkte Zuschlag für >100 % Finanzierung" : "ohne Zuschlag für >100 % Finanzierung"
-    },
-    {
-      label: "KfW 298",
-      value: state.useKfw ? `${formatPercent(state.kfwRate, 2)} bis Jahr ${KFW_FIXED_RATE_YEARS}` : "nicht genutzt",
-      note: state.useKfw ? `ab Jahr ${KFW_FIXED_RATE_YEARS + 1} mit Bankzins fortgeschrieben` : "reine Bankfinanzierung"
-    },
-    {
-      label: "Wachstum",
-      value: `${formatPercent(state.rentGrowth, 2)} Miete | ${formatPercent(state.valueGrowth, 2)} Wert`,
-      note: `Kosteninflation ${formatPercent(COST_INFLATION_RATE * 100, 2)} p.a.`
-    }
-  ];
-
-  dom.heroAssumptions.innerHTML = items.map((item) => `
-    <div>
-      <span class="source-label">${item.label}</span>
-      <strong>${item.value}</strong>
-      <span class="source-note">${item.note}</span>
-    </div>
-  `).join("");
-}
-
 function renderSummary(scenario) {
   const cards = [
     {
-      title: "Monatlich nach Steuer in Jahr 1",
+      title: "Monatliche Wirkung im Startjahr",
       value: formatCurrency(scenario.firstYear.monthlyAfterTax, 0, true),
-      note: `${formatCurrency(scenario.firstYear.afterTaxCashFlow, 0, true)} im ersten Jahr`,
+      note: scenario.firstYear.monthlyAfterTax >= 0
+        ? "Im Basisszenario entsteht schon im ersten Jahr ein monatlicher Überschuss nach Steuer."
+        : "Im Basisszenario tragen Sie anfangs monatlich zu. Die Frage ist, ob der langfristige Vermögensvorteil das rechtfertigt.",
       stateClass: scenario.firstYear.monthlyAfterTax >= 0 ? "is-positive" : "is-negative"
     },
     {
-      title: `Vermögen mit Investment in Jahr ${state.horizon}`,
-      value: formatCurrency(scenario.finalYear.wealthWithInvestment, 0, true),
-      note: `Objektvermögen plus laufende Nachsteuer-Liquidität`,
-      stateClass: scenario.finalYear.wealthWithInvestment >= 0 ? "is-positive" : "is-negative"
-    },
-    {
-      title: `Vermögen ohne Investment in Jahr ${state.horizon}`,
-      value: formatCurrency(scenario.finalYear.wealthWithoutInvestment, 0, true),
-      note: `Eigenkapital plus vermiedene Belastungen im Vergleichsdepot`,
-      stateClass: scenario.finalYear.wealthWithoutInvestment >= 0 ? "is-positive" : "is-negative"
-    },
-    {
-      title: "Vorteil / Nachteil vs. Vergleichsdepot",
-      value: formatCurrency(scenario.finalYear.wealthDelta, 0, true),
-      note: `Differenz der beiden Vermögenspfade in Jahr ${state.horizon}`,
+      title: `Vermögensvergleich in Jahr ${state.horizon}`,
+      rows: [
+        { label: "Mit Immobilie", value: formatCurrency(scenario.finalYear.wealthWithInvestment, 0, true) },
+        { label: "Ohne Immobilie", value: formatCurrency(scenario.finalYear.wealthWithoutInvestment, 0, true) },
+        { label: "Differenz", value: formatCurrency(scenario.finalYear.wealthDelta, 0, true) }
+      ],
+      note: `Der Vergleich nutzt Ihr Eigenkapital und nur vermiedene Belastungen für das Depot.`,
       stateClass: scenario.finalYear.wealthDelta >= 0 ? "is-positive" : "is-negative"
     },
     {
-      title: "Eigenkapital / Erwerbsnebenkosten",
-      value: `${formatCurrency(scenario.equityContribution, 0)} / ${formatCurrency(scenario.ancillaryCosts, 0)}`,
-      note: `Finanzierungsbedarf ${formatCurrency(scenario.financingNeed, 0)} bei ${formatPercent(scenario.financingQuote * 100, 1)}`,
-      stateClass: ""
-    },
-    {
-      title: "Finanzierungsstruktur",
-      value: `${formatCurrency(scenario.bankPrincipal, 0)} Bank${state.useKfw ? ` | ${formatCurrency(scenario.kfwPrincipal, 0)} KfW` : ""}`,
-      note: state.useKfw
-        ? `Bankzins ${formatPercent(scenario.bankRateApplied, 2)}, KfW bis Jahr ${KFW_FIXED_RATE_YEARS} mit ${formatPercent(state.kfwRate, 2)}`
-        : `reine Bankfinanzierung mit ${formatPercent(scenario.bankRateApplied, 2)}`,
-      stateClass: ""
+      title: "Was das Ergebnis aktuell treibt",
+      bullets: [
+        `Das Vergleichsdepot läuft defensiv mit ${formatPercent(state.depotReturn, 2)} p.a. und nicht mit einem aggressiven Aktienindex.`,
+        `Nebenkosten und Eigenkapital sind im Vermögensvergleich enthalten; die Immobilie startet also nicht künstlich zu freundlich.`,
+        state.useKfw
+          ? `KfW-Mittel entlasten die ersten ${KFW_FIXED_RATE_YEARS} Jahre; danach rechnet das Modell dort konservativ mit Bankzins weiter.`
+          : `Ohne KfW läuft das Szenario vollständig über Bankfinanzierung.`
+      ],
+      note: scenario.isOver100Financing
+        ? "Die Finanzierung liegt über 100 % des Kaufpreises; deshalb ist bereits der 0,50 %-Punkte-Zinsaufschlag eingerechnet."
+        : "Die Finanzierung liegt nicht über 100 % des Kaufpreises; ein Vollfinanzierungsaufschlag fällt im Basisszenario nicht an.",
+      stateClass: "is-neutral"
     }
   ];
 
   dom.summaryGrid.innerHTML = cards.map((card) => `
     <article class="summary-card ${card.stateClass}">
       <h3>${card.title}</h3>
-      <span class="summary-value">${card.value}</span>
+      ${card.rows ? `
+        <div class="summary-rows">
+          ${card.rows.map((row) => `
+            <div class="summary-row">
+              <span class="summary-row-label">${row.label}</span>
+              <span class="summary-row-value">${row.value}</span>
+            </div>
+          `).join("")}
+        </div>
+      ` : card.bullets ? `
+        <div class="summary-bullets">
+          ${card.bullets.map((bullet) => `<div class="summary-bullet">${bullet}</div>`).join("")}
+        </div>
+      ` : `<span class="summary-value">${card.value}</span>`}
       <div class="summary-note">${card.note}</div>
     </article>
   `).join("");
@@ -687,7 +673,6 @@ function renderPropertyCards() {
   dom.propertyCards.innerHTML = Object.values(properties).map((property) => {
     const assumption = state.propertyInputs[property.id];
     const isSelected = property.id === state.selectedProperty;
-    const rentMonthly = property.area * assumption.rentPerSqm + (assumption.parkingEnabled ? 140 : 0);
     return `
       <article class="property-card ${isSelected ? "is-selected" : ""}">
         <div class="property-top">
@@ -699,23 +684,17 @@ function renderPropertyCards() {
         </div>
         <img class="property-plan" src="${property.image}" alt="Grundriss ${property.title}">
         <div class="property-body">
-          <div class="property-metrics">
-            <div class="metric">
-              <strong>${formatCurrency(assumption.price, 0)}</strong>
-              <span>Kaufpreisannahme</span>
-            </div>
-            <div class="metric">
-              <strong>${formatCurrency(rentMonthly, 0)}</strong>
-              <span>Startmiete pro Monat</span>
-            </div>
-            <div class="metric">
-              <strong>${formatNumber(assumption.rentPerSqm, 2)} €/m²</strong>
-              <span>Mietansatz</span>
-            </div>
-            <div class="metric">
-              <strong>${formatPercent((annualize(rentMonthly) / assumption.price) * 100, 2)}</strong>
-              <span>Bruttomietrendite</span>
-            </div>
+          <div class="property-story">
+            <strong>${property.positioning}</strong>
+            <p>${property.story}</p>
+          </div>
+          <div class="property-facts">
+            <span class="property-fact">${property.rooms}</span>
+            <span class="property-fact">ca. ${formatNumber(property.area, 2)} m²</span>
+            <span class="property-fact">Grundriss aus dem Exposé</span>
+          </div>
+          <div class="property-highlights">
+            ${property.highlights.map((highlight) => `<div class="property-highlight">${highlight}</div>`).join("")}
           </div>
           <p class="property-note">${property.excerptNote}</p>
           <div class="property-actions">

@@ -2,6 +2,7 @@
 .env
 .env.*
 Exposé - das ebert.pdf
+assets/project-*.png
 node_modules/
 dist/
 build/

@@ -14,34 +14,78 @@
       <div class="hero-content">
         <div class="hero-topline">
           <span class="eyebrow">Das Ebert | Leipzig</span>
-          <span class="eyebrow eyebrow-muted">MLP-konforme Schnellkalkulation</span>
+          <span class="eyebrow eyebrow-muted">Projektbilder direkt aus dem Exposé</span>
         </div>
         <div class="hero-grid">
           <section class="hero-copy">
             <p class="kicker">Liquidität und Vermögensvergleich</p>
             <h1>Was bedeutet "Das Ebert" für Ihr Vermögen in 20 Jahren?</h1>
             <p class="hero-text">
-              Mit wenigen Eingaben sehen Sie, wie sich das Investment auf Ihre monatliche Liquidität
-              auswirken kann und wie es im selben Zeitraum gegen ein defensives Vergleichsdepot abschneidet.
+              Mit wenigen Eingaben sehen Sie drei Dinge: die monatliche Wirkung zum Start,
+              Ihr Vermögen mit der Immobilie und dieselbe Strecke ohne Kauf über ein defensives Vergleichsdepot.
             </p>
             <div class="hero-facts" id="hero-facts"></div>
           </section>
-          <aside class="hero-panel card">
-            <p class="panel-kicker">Aktuelle Modellannahmen</p>
-            <div class="source-stack" id="hero-assumptions"></div>
+          <aside class="hero-panel hero-project card">
+            <img class="hero-panel-image" src="assets/project-garden.jpg" alt="Innenhof und Parkblick aus dem Exposé">
+            <div class="hero-panel-copy">
+              <p class="panel-kicker">Projekt im Blick</p>
+              <strong>Urbanes Wohnen am Park</strong>
+              <span class="source-note">Noch bevor die Rechnung startet, sollte das Objekt selbst überzeugen.</span>
+            </div>
           </aside>
         </div>
       </div>
     </header>
 
     <main class="content">
+      <section class="project-story">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Projektstory</p>
+            <h2>Warum Kunden hier genauer hinschauen</h2>
+          </div>
+        </div>
+        <div class="story-grid">
+          <article class="card story-copy-card">
+            <p class="story-lead">
+              Die Rechnung darf nicht vor dem Objekt stehen. Kunden entscheiden leichter,
+              wenn sie zuerst sehen, wofür sie Kapital binden und was dieses Projekt emotional auslöst.
+            </p>
+            <div class="story-points">
+              <div>
+                <strong>Lebendiges Stadtflair</strong>
+                <span>Markante Straßenansicht mit klarer Urbanität und hochwertiger Fassade.</span>
+              </div>
+              <div>
+                <strong>Ruhe im Inneren</strong>
+                <span>Der grüne Innenbereich übersetzt Lagevorteil in Wohnqualität.</span>
+              </div>
+              <div>
+                <strong>Wohnung konkret erlebbar</strong>
+                <span>Grundrisse und Interieurs schaffen Vertrauen vor dem Rechnen.</span>
+              </div>
+            </div>
+          </article>
+          <figure class="story-visual story-visual-wide">
+            <img src="assets/project-street.jpg" alt="Straßenansicht des Projekts aus dem Exposé">
+          </figure>
+          <figure class="story-visual">
+            <img src="assets/project-boulevard.jpg" alt="Boulevardansicht des Projekts aus dem Exposé">
+          </figure>
+          <figure class="story-visual">
+            <img src="assets/interior-collage.png" alt="Innenraumdarstellung aus dem Exposé">
+          </figure>
+        </div>
+      </section>
+
       <section class="workspace">
         <div class="control-column">
           <article class="card control-card">
             <div class="section-head">
               <div>
                 <p class="section-kicker">Eingaben</p>
-                <h2>Ihre Ausgangslage</h2>
+                <h2>Schnellvergleich starten</h2>
               </div>
               <span class="badge">max. 20 Jahre</span>
             </div>
@@ -72,7 +116,26 @@
                 <input id="horizon" type="number" min="5" max="20" step="1" value="20">
                 <small>Diagramm, Vermögensvergleich und Tabelle laufen bis zu diesem Jahr.</small>
               </label>
+            </div>
 
+            <div class="toggle-row">
+              <label class="toggle">
+                <input id="parking-enabled" type="checkbox">
+                <span>TG-Stellplatz einrechnen</span>
+              </label>
+            </div>
+          </article>
+
+          <details class="card details-card assumptions-card">
+            <summary class="details-summary">
+              <div>
+                <p class="section-kicker">Erweiterte Annahmen</p>
+                <h2>Preis, Miete, Steuern und Finanzierung</h2>
+              </div>
+              <span class="badge badge-soft">optional</span>
+            </summary>
+
+            <div class="form-grid">
               <label class="field">
                 <span class="field-label">Kaufpreisannahme</span>
                 <input id="price-input" type="number" min="0" step="1000">
@@ -122,22 +185,9 @@
 
             <div class="toggle-row">
               <label class="toggle">
-                <input id="parking-enabled" type="checkbox">
-                <span>TG-Stellplatz einrechnen</span>
-              </label>
-              <label class="toggle">
                 <input id="use-kfw" type="checkbox" checked>
                 <span>KfW 298 nutzen</span>
               </label>
-            </div>
-          </article>
-
-          <article class="card assumptions-card">
-            <div class="section-head">
-              <div>
-                <p class="section-kicker">Vergleich &amp; Finanzierung</p>
-                <h2>Depot und Darlehen</h2>
-              </div>
             </div>
 
             <div class="form-grid">
@@ -173,7 +223,7 @@
             </div>
 
             <div class="assumption-notes" id="assumption-notes"></div>
-          </article>
+          </details>
         </div>
 
         <div class="result-column">
@@ -201,13 +251,14 @@
             </div>
           </article>
 
-          <article class="card table-card">
-            <div class="section-head">
+          <details class="card details-card table-card">
+            <summary class="details-summary">
               <div>
-                <p class="section-kicker">Jahresvergleich</p>
-                <h2>Liquidität und Vermögensaufbau</h2>
+                <p class="section-kicker">Rechenweg</p>
+                <h2>Jahresvergleich und Detailzahlen</h2>
               </div>
-            </div>
+              <span class="badge">optional</span>
+            </summary>
             <div class="table-scroll">
               <table>
                 <thead>
@@ -227,7 +278,7 @@
                 <tbody id="yearly-table"></tbody>
               </table>
             </div>
-          </article>
+          </details>
         </div>
       </section>
 
@@ -235,41 +286,43 @@
         <div class="section-head">
           <div>
             <p class="section-kicker">Wohnungen &amp; Grundrisse</p>
-            <h2>Musterwohnungen aus dem Projekt</h2>
+            <h2>Zwei Wohnungsgrößen direkt vergleichbar</h2>
           </div>
           <span class="badge badge-soft">Grundrisse aus dem Exposé</span>
         </div>
         <div class="property-grid" id="property-cards"></div>
       </section>
 
-      <section class="insight-grid">
-        <article class="card media-card">
+      <section class="next-step-grid">
+        <article class="card media-card media-card-wide">
           <div class="section-head">
             <div>
               <p class="section-kicker">Projektbild</p>
-              <h2>Stadtlage trifft Parknähe</h2>
+              <h2>Die Immobilie bleibt der Anker der Entscheidung</h2>
             </div>
           </div>
-          <img class="media-image" src="assets/interior-collage.png" alt="Innenraum und Küche aus dem Exposé">
+          <img class="media-image" src="assets/project-boulevard.jpg" alt="Projektansicht aus dem Exposé">
           <p class="media-copy">
-            Die Bildwelt stammt direkt aus dem Exposé und dient hier als vertriebliche Einordnung
-            der Wohnqualität. Sie hilft, die nüchternen Zahlen mit dem Projekt selbst zu verknüpfen.
+            Darum bleibt das Projektbild sichtbar im Hauptfluss: Der Kunde soll nicht nur rechnen,
+            sondern das Objekt als reales Investment vor Augen haben.
           </p>
         </article>
 
-        <article class="card media-card">
+        <article class="card next-step-card">
           <div class="section-head">
             <div>
-              <p class="section-kicker">Exposé-Grafik</p>
-              <h2>AfA-Argumentation des Projekts</h2>
+              <p class="section-kicker">Nächster Schritt</p>
+              <h2>Wenn das Szenario passt, geht es hier weiter</h2>
             </div>
           </div>
-          <img class="media-image" src="assets/afa-graphic.png" alt="AfA-Grafik aus dem Exposé">
-          <p class="media-copy">
-            Die App rechnet mit der im Projektmaterial hervorgehobenen degressiven AfA plus
-            Sonder-AfA nach § 7b EStG. Die Modellierung bleibt trotzdem eine Schnellkalkulation
-            und ersetzt keine individuelle Steuerprüfung.
+          <p class="next-step-copy">
+            Erst Projektbild prüfen, dann Wohnung wählen, dann das Szenario mit Ihrem Eigenkapital durchspielen.
+            Wenn die Richtung stimmt, sollten Sie im nächsten Schritt Exposé und Detailkalkulation gemeinsam besprechen.
           </p>
+          <div class="next-step-actions">
+            <a class="action-link action-link-primary" href="Exposé%20-%20das%20ebert.pdf" target="_blank" rel="noreferrer">Exposé öffnen</a>
+            <a class="action-link" href="#summary-grid">Zum Ergebnis springen</a>
+          </div>
         </article>
       </section>
 

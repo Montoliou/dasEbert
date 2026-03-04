@@ -207,8 +207,88 @@ summary:focus-visible {
   color: rgba(255, 255, 255, 0.8);
 }
 
+.hero-project {
+  overflow: hidden;
+  padding: 0;
+}
+
+.hero-panel-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.hero-panel-copy {
+  display: grid;
+  gap: 8px;
+  padding: 20px 24px 24px;
+}
+
+.hero-panel-copy strong {
+  font-size: 28px;
+  line-height: 1.15;
+  color: var(--mlp-blue);
+}
+
 .content {
   padding: 48px 0 64px;
+}
+
+.project-story {
+  margin-bottom: 48px;
+}
+
+.story-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+.story-copy-card {
+  display: grid;
+  gap: 24px;
+}
+
+.story-lead {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--mlp-blue);
+}
+
+.story-points {
+  display: grid;
+  gap: 16px;
+}
+
+.story-points strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-dark);
+}
+
+.story-points span {
+  color: var(--text-medium);
+}
+
+.story-visual {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--titanium);
+  background: var(--bg-white);
+  box-shadow: var(--shadow-soft);
+}
+
+.story-visual-wide {
+  grid-column: span 2;
+}
+
+.story-visual img {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  object-fit: cover;
 }
 
 .workspace {
@@ -242,6 +322,33 @@ summary:focus-visible {
   background:
     linear-gradient(180deg, rgba(71, 161, 144, 0.06), rgba(71, 161, 144, 0) 140px),
     var(--bg-white);
+}
+
+.details-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.details-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  padding: 24px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.details-summary::-webkit-details-marker {
+  display: none;
+}
+
+.details-card[open] .details-summary {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.details-card > :not(summary) {
+  padding: 24px;
 }
 
 .section-head {
@@ -440,6 +547,62 @@ summary:focus-visible {
   color: var(--warning-orange);
 }
 
+.summary-rows {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: baseline;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.summary-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.summary-row-label {
+  color: var(--text-medium);
+  font-size: 14px;
+}
+
+.summary-row-value {
+  color: var(--mlp-blue);
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 700;
+  text-align: right;
+}
+
+.summary-bullets {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.summary-bullet {
+  position: relative;
+  padding-left: 20px;
+  color: var(--text-dark);
+}
+
+.summary-bullet::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--turquoise);
+}
+
 .chart-wrap {
   border: 1px solid var(--titanium);
   background:
@@ -599,29 +762,60 @@ tbody tr.is-highlight {
   padding: 24px;
 }
 
-.property-metrics {
+.property-story {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-.metric {
-  padding: 16px;
-  border: 1px solid var(--line-soft);
-  background: var(--bg-soft);
-}
-
-.metric strong {
-  display: block;
-  font-size: 24px;
+.property-story strong {
+  font-size: 20px;
   line-height: 1.2;
   color: var(--mlp-blue);
 }
 
-.metric span {
-  display: block;
-  font-size: 14px;
+.property-story p {
+  margin: 0;
   color: var(--text-medium);
+}
+
+.property-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.property-fact {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(3, 61, 93, 0.06);
+  color: var(--mlp-blue);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.property-highlights {
+  display: grid;
+  gap: 12px;
+}
+
+.property-highlight {
+  position: relative;
+  padding-left: 20px;
+  color: var(--text-dark);
+}
+
+.property-highlight::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--turquoise);
 }
 
 .property-actions {
@@ -650,17 +844,67 @@ tbody tr.is-highlight {
   color: var(--mlp-blue);
 }
 
-.insight-grid {
+.next-step-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   margin-top: 48px;
 }
 
+.media-card-wide {
+  overflow: hidden;
+}
+
 .media-image {
   width: 100%;
   border: 1px solid var(--line-soft);
   background: var(--bg-soft);
+}
+
+.next-step-card {
+  display: grid;
+  gap: 24px;
+  align-content: start;
+}
+
+.next-step-copy {
+  margin: 0;
+  color: var(--text-dark);
+}
+
+.next-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.action-link {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 48px;
+  padding: 12px 24px;
+  border: 1px solid var(--mlp-blue);
+  color: var(--mlp-blue);
+  text-decoration: none;
+  font-weight: 700;
+  background: var(--bg-white);
+}
+
+.action-link:hover {
+  transform: translateY(-1px);
+  border-color: var(--mlp-blue-deep);
+  color: var(--mlp-blue-deep);
+}
+
+.action-link-primary {
+  background: var(--mlp-blue);
+  color: var(--bg-white);
+}
+
+.action-link-primary:hover {
+  background: var(--mlp-blue-deep);
+  color: var(--bg-white);
 }
 
 .disclaimer-card {
@@ -706,11 +950,12 @@ tbody tr.is-highlight {
 }
 
 @media (max-width: 1180px) {
+  .story-grid,
   .workspace,
   .hero-grid,
   .summary-grid,
   .property-grid,
-  .insight-grid {
+  .next-step-grid {
     grid-template-columns: 1fr;
   }
 
@@ -720,6 +965,10 @@ tbody tr.is-highlight {
 
   .hero-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .story-visual-wide {
+    grid-column: auto;
   }
 }
 
@@ -744,7 +993,6 @@ tbody tr.is-highlight {
   }
 
   .form-grid,
-  .property-metrics,
   .hero-facts {
     grid-template-columns: 1fr;
   }
@@ -777,7 +1025,8 @@ tbody tr.is-highlight {
   }
 
   .property-button,
-  .segmented {
+  .segmented,
+  .action-link {
     width: 100%;
   }
 

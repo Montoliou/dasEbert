@@ -67,8 +67,17 @@
   - unit tests for wealth comparison math
 
 ## Next Concrete Steps
-- Implement wealth comparison with and without investment.
-- Add equity input and >100 % financing surcharge.
-- Rework summary cards and table to decision-oriented metrics.
-- Remove the public link to the sales sheet from the customer UI.
-- Add deployment follow-up for the public Expose link.
+- Keep the visible customer layer focused on:
+  - project images
+  - monthly start effect
+  - wealth comparison after the chosen horizon
+- Keep advanced tax and financing controls behind optional details.
+- Maintain a strong project-story section so the app does not collapse into a pure calculator.
+- Add a clearer post-result path:
+  - expose access
+  - advisor follow-up CTA
+  - optional PDF or scenario handoff later
+- In a later hardening pass:
+  - split `app.js` into modules
+  - add tests for tax, loan, and wealth comparison logic
+  - add CI and linting
