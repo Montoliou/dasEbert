@@ -1,0 +1,12 @@
+.ftp-credentials
+.env
+.env.*
+Exposé - das ebert.pdf
+node_modules/
+dist/
+build/
+tmp/
+temp/
+*.log
+Thumbs.db
+.DS_Store
